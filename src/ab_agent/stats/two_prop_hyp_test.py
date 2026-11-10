@@ -1,5 +1,5 @@
 import math
-from normal_dist import standard_normal_cdf, standard_normal_ppf
+from ab_agent.stats.normal_dist import standard_normal_cdf, standard_normal_ppf
 
 def pooled_proportion(successes_a, total_a, successes_b, total_b):
     return (successes_a + successes_b) / (total_a + total_b)
