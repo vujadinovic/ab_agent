@@ -1,14 +1,17 @@
 [project]
 name = "ab-agent"
 version = "0.1.0"
-description = "Add your description here"
+description = "A/B testing and causal inference toolkit, with an AI agent on top"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
-    { name = "vuja", email = "vujadinovicstefan01@gmail.com" }
+    { name = "Stefan Vujadinovic", email = "vujadinovicstefan01@gmail.com" },
+    {name = "Marko Milinic", email = "milinicmarko1@gmail.com"}
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "numpy>=2.5.4",
+    "numpy>=2.1",
 ]
 
 [project.scripts]
