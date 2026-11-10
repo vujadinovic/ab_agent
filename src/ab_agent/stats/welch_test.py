@@ -1,7 +1,7 @@
 # currently with normal distribution approximation
 
 import numpy as np
-from two_prop_hyp_test import confidence_interval_from_se, two_sided_p_value
+from ab_agent.stats.two_prop_hyp_test import confidence_interval_from_se, two_sided_p_value
 
 
 def welch_standard_error(values_a, values_b):

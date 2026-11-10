@@ -1,5 +1,5 @@
 import math
-from normal_dist import standard_normal_ppf
+from ab_agent.stats.normal_dist import standard_normal_ppf, standard_normal_cdf
 
 def required_sample_size_per_variant(baseline_rate, minimum_detectable_effect, alpha, power):
     treatment_rate = baseline_rate + minimum_detectable_effect

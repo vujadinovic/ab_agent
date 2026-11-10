@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from ab_agent.stats.normal_dist import standard_normal_cdf
 
 def chi_square_statistic(observed_counts, expected_counts):
     np_observed_counts = np.asarray(observed_counts, dtype = float)
