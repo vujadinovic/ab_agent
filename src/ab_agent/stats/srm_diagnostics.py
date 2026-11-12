@@ -1,6 +1,7 @@
-import math
+
 import numpy as np
-from ab_agent.stats.normal_dist import standard_normal_cdf
+from scipy import stats
+
 
 def chi_square_statistic(observed_counts, expected_counts):
     np_observed_counts = np.asarray(observed_counts, dtype = float)
@@ -18,7 +19,9 @@ def sample_ratio_mismatch_check(observed_counts, expected_ratios, alpha):
     expected_counts = total_count * expected_ratios_np
 
     chi_square = chi_square_statistic(observed_counts, expected_counts)
-    p = 2*(1 - standard_normal_cdf(math.sqrt(chi_square)))
+    degrees_of_freedom = len(observed_counts_np) - 1 
+    p = float(stats.chi2.sf(chi_square, df=degrees_of_freedom))
+    
     srm_detected = p < alpha
 
-    return {'chi_square': chi_square, 'p_value': p, 'srm_detected': srm_detected}    
+    return {'chi_square': chi_square,'degrees_of_freedom': degrees_of_freedom, 'p_value': p, 'srm_detected': srm_detected}    
