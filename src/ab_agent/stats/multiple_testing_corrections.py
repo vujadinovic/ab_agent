@@ -1,10 +1,10 @@
 import numpy as np
 
 def bonferroni_correction(p_values, alpha):
-    if not p_values:
+    p_values_np = np.asarray(p_values, dtype=float)
+    if p_values_np.size == 0:
         return np.array([], dtype=bool)
-    m = len(p_values)
-    p_values_np = np.asarray(p_values)
+    m = p_values_np.size
     adjusted_alpha = alpha/m
     is_significant = p_values_np <= adjusted_alpha
     return is_significant
