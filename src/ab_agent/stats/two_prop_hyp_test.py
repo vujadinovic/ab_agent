@@ -45,11 +45,11 @@ def two_prop_z_test(successes_a, total_a, successes_b, total_b, confidence_level
     ci_lower, ci_upper = confidence_interval_from_se(effect, se_ci, confidence_level)
 
     return {
-        'effect': effect,
-        'se': se_test,
-        'z': z,
-        'p_value': p_value,
-        'ci_lower': ci_lower,
-        'ci_upper': ci_upper,
+        'effect': float(effect),
+        'se': float(se_test),
+        'z': float(z),
+        'p_value': float(p_value),
+        'ci_lower': float(ci_lower),
+        'ci_upper': float(ci_upper),
 
     }
