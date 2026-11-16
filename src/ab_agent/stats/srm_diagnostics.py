@@ -18,7 +18,7 @@ def sample_ratio_mismatch_check(observed_counts, expected_ratios, alpha):
     expected_counts = total_count * expected_ratios_np
 
     chi_square = chi_square_statistic(observed_counts, expected_counts)
-    p = 2*(1 - standard_normal_cdf(math.sqrt(chi_square)))
+    p = math.erfc(math.sqrt(chi_square) / math.sqrt(2.0))
     srm_detected = p < alpha
 
     return {'chi_square': chi_square, 'p_value': p, 'srm_detected': srm_detected}    
