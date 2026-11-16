@@ -25,7 +25,7 @@ def incomplete_beta_continued_fraction(a, b, x):
 		if abs(d * c - 1.0) < 1e-15:
 			break
 
-		return h
+	return h
 
 def regularized_incomplete_beta(a, b, x):
 	if x <= 0.0:
