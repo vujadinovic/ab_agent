@@ -1,6 +1,7 @@
 # currently with normal distribution approximation
 import math
 import numpy as np
+from ab_agent.stats.normal_dist import standard_normal_cdf
 from ab_agent.stats.two_prop_hyp_test import confidence_interval_from_se, two_sided_p_value
 
 def incomplete_beta_continued_fraction(a, b, x):
@@ -46,6 +47,82 @@ def student_t_two_sided_p_value(t, df):
 	# P(|T| >= |t|), computed directly from the tail
 	x = df / (df + t * t)
 	return regularized_incomplete_beta(df / 2.0, 0.5, x)
+
+def student_t_cdf(t, df):
+	# P(T <= t), from the two-sided tail by symmetry of the t distribution
+	half_tail = student_t_two_sided_p_value(t, df) / 2.0
+	return 1.0 - half_tail if t >= 0 else half_tail
+
+def _incomplete_beta_step(a, b, x):
+	# g(a) = Gamma(a+b) / (Gamma(a+1) Gamma(b)) x^a (1-x)^b,
+	# the amount by which I_x(a, b) exceeds I_x(a+1, b)
+	return math.exp(
+		math.lgamma(a + b) - math.lgamma(a + 1.0) - math.lgamma(b) + a * math.log(x) + b * math.log1p(-x)
+	)
+
+def noncentral_t_cdf(t, df, noncentrality):
+	# P(T <= t) for T = (Z + noncentrality) / sqrt(V / df), Z ~ N(0, 1), V ~ chi^2(df).
+	# For t >= 0 (Lenth 1989, AS 243):
+	#   F(t) = Phi(-d) + 1/2 sum_j [P_j I_x(j + 1/2, df/2) + Q_j I_x(j + 1, df/2)],
+	#   x = t^2 / (t^2 + df), lam = d^2 / 2,
+	#   P_j = e^-lam lam^j / j!, Q_j = d / sqrt(2) e^-lam lam^j / Gamma(j + 3/2).
+	# The sum starts at the Poisson mode j = floor(lam) and runs both ways
+	# (Benton and Krishnamoorthy 2003), so the weights do not underflow for large d.
+	# For t < 0, F(t; d) = 1 - F(-t; -d).
+	if t < 0:
+		return 1.0 - noncentral_t_cdf(-t, df, -noncentrality)
+	d = noncentrality
+	if d == 0:
+		return student_t_cdf(t, df)
+	base = standard_normal_cdf(-d)
+	if t == 0:
+		return base
+
+	x = t * t / (t * t + df)
+	if x >= 1.0:
+		return 1.0
+	b = df / 2.0
+	lam = d * d / 2.0
+	k = int(lam)
+	log_poisson = -lam + k * math.log(lam)
+	p_k = math.exp(log_poisson - math.lgamma(k + 1.0))
+	q_k = d / math.sqrt(2.0) * math.exp(log_poisson - math.lgamma(k + 1.5))
+	ia_k = regularized_incomplete_beta(k + 0.5, b, x)
+	ib_k = regularized_incomplete_beta(k + 1.0, b, x)
+	width = int(10.0 * math.sqrt(lam)) + 30
+
+	# forward: j = k, k+1, ...; I_x(a+1, b) = I_x(a, b) - g(a), g(a+1) = g(a) x (a+b) / (a+1)
+	p, q, ia, ib = p_k, q_k, ia_k, ib_k
+	ga = _incomplete_beta_step(k + 0.5, b, x)
+	gb = _incomplete_beta_step(k + 1.0, b, x)
+	total = 0.0
+	for j in range(k, k + width + 1):
+		total += p * ia + q * ib
+		a1, a2 = j + 0.5, j + 1.0
+		ia = max(ia - ga, 0.0)
+		ib = max(ib - gb, 0.0)
+		ga *= x * (a1 + b) / (a1 + 1.0)
+		gb *= x * (a2 + b) / (a2 + 1.0)
+		p *= lam / (j + 1.0)
+		q *= lam / (j + 1.5)
+
+	# backward: j = k-1, ..., 0; I_x(a-1, b) = I_x(a, b) + g(a-1), g(a-2) = g(a-1) (a-1) / (x (a-2+b))
+	p, q, ia, ib = p_k, q_k, ia_k, ib_k
+	if k >= 1:
+		ga = _incomplete_beta_step(k - 0.5, b, x)
+		gb = _incomplete_beta_step(float(k), b, x)
+	for j in range(k - 1, max(k - width, 0) - 1, -1):
+		a1, a2 = j + 1.5, j + 2.0  # parameters of term j + 1
+		ia += ga
+		ib += gb
+		if j > 0:
+			ga *= (a1 - 1.0) / (x * (a1 - 2.0 + b))
+			gb *= (a2 - 1.0) / (x * (a2 - 2.0 + b))
+		p *= (j + 1.0) / lam
+		q *= (j + 1.5) / lam
+		total += p * ia + q * ib
+
+	return min(max(base + 0.5 * total, 0.0), 1.0)
 
 def student_t_critical_value(confidence_level, df):
 	# t such that P(|T| <= t) = confidence_level, found by bisection
