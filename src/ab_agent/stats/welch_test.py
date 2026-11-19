@@ -9,7 +9,7 @@ def incomplete_beta_continued_fraction(a, b, x):
 	c=1.0
 	d=1.0-(a+b)*x/(a+1.0)
 	d=1.0 / (d if abs(d)> tiny else tiny)
-	h = d 
+	h = d
 
 	for m in range(1, 10000):
 		for aa in (
@@ -101,22 +101,26 @@ def welch_degrees_of_freedom(values_a, values_b):
 def welch_t_test(values_a, values_b, confidence_level = 0.95):
 	values_a_np = np.asarray(values_a, dtype=float)
 	values_b_np = np.asarray(values_b, dtype=float)
- 
+
 	SE = welch_standard_error(values_a_np, values_b_np)
 	effect = float(np.mean(values_b_np) - np.mean(values_a_np))
- 
+
 	if SE == 0:
-		t = 0.0
 		df = float(len(values_a_np) + len(values_b_np) - 2)
-		p_value = 1.0
+		if effect == 0:
+			t = 0.0
+			p_value = 1.0
+		else:
+			t = np.sign(effect) * np.inf
+			p_value = 0.0
 	else:
 		t = effect / SE
 		df = welch_degrees_of_freedom(values_a_np, values_b_np)
 		p_value = student_t_two_sided_p_value(t, df)
- 
+
 	margin = student_t_critical_value(confidence_level, df) * SE
 	ci_lower, ci_upper = effect - margin, effect + margin
- 
+
 	return {
 		'effect': effect,
 		'se': float(SE),
