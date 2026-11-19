@@ -12,6 +12,9 @@ def bonferroni_correction(p_values, alpha):
 
 def benjamini_hochberg_correction(p_values, alpha):
     m = len(p_values)
+    if m == 0:
+        return np.zeros(0, dtype = bool)
+
     p_values_np = np.asarray(p_values)
     order = np.argsort(p_values_np)
     p_sorted = p_values_np[order]
