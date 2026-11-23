@@ -2,12 +2,13 @@ import math
 import numpy as np
 
 def standard_normal_cdf(z):
+    # Phi(z) = erfc(-z/sqrt(2)) / 2. Unlike (1 + erf(z/sqrt(2))) / 2, this keeps
+    # full relative precision in the lower tail, where 1 + erf(...) cancels.
     if np.isscalar(z):
-        return 0.5*(1 + math.erf(z/np.sqrt(2.0)))
+        return 0.5*math.erfc(-z/np.sqrt(2.0))
 
-    z_arr = np.asarray(z)
-    erf_vec = np.vectorize(math.erf)
-    return 0.5*(1 + erf_vec(z/np.sqrt(2.0)))
+    erfc_vec = np.vectorize(math.erfc)
+    return 0.5*erfc_vec(-np.asarray(z)/np.sqrt(2.0))
 
 
 # Rational approximations from Wichura, M.J. (1988), "Algorithm AS 241: The
